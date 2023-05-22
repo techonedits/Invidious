@@ -1,0 +1,24 @@
+sudo pacman -S base-devel librsvg postgresql
+useradd -m invidious
+su - invidious
+git clone https://github.com/iv-org/invidious
+exit
+systemctl enable --now postgresql
+sudo -i -u postgres
+psql -c "CREATE USER kemal WITH PASSWORD 'kemal';" # Change 'kemal' here to a stronger password, and update `password` in config/config.yml
+createdb -O kemal invidious
+exit
+su - invidious
+cd invidious
+make
+
+# Configure config/config.yml as you like
+cp config/config.example.yml config/config.yml 
+
+# Deploy the database
+./invidious --migrate
+
+exit
+crystal build src/invidious.cr -Ddisable_quic --release
+cp /home/invidious/invidious/invidious.service /etc/systemd/system/invidious.service
+systemctl enable --now invidious.service
